@@ -1,0 +1,158 @@
+from dbase import Database
+import visitnepalquiz
+print("-----------------Visit Nepal 2020 Quiz-----------------")
+db=Database()
+
+def breaksection():
+    print("-----------------------------------------------------")
+"""
+a=Database()
+if(a.isOpen()):
+    questions=a.selectFromQuestion()
+    count=5
+    while(count!=0):
+        question=visitnepalquiz.getQuestion(questions)
+        questions.remove(question)
+        print(question)
+        tag_contents=a.selectFromTag(question[-1])
+        options=visitnepalquiz.getOptions(tag_contents,question)
+        print(options)
+        count-=1
+    """
+
+playername=input("Give your name: ")
+breaksection()
+print("Welcome To Visit Nepal Quiz 2020!\nEach question carry 100 marks.\nBe ready to play, {0}".format(playername))
+breaksection()
+
+menu="Choose:\n1.Play\n2.HighScore\n3.Quit"
+
+if(db.isOpen()):
+    questions=db.selectFromQuestion()
+    choice=int(input(menu))
+    breaksection()
+    while(choice!=3):
+        if(choice==1):
+            count=5
+            c=0
+            score=0
+            while(count!=0):
+                question=visitnepalquiz.getQuestion(questions)
+                questions.remove(question)
+                tags=db.selectFromTag(question[-1])
+                options=visitnepalquiz.getOptions(tags,question)
+                finalQuestion=visitnepalquiz.giveFinalQuestion(question,options)
+                visitnepalquiz.printQuestion(finalQuestion)
+                answer=int(input("Choose your choice: "))-1
+                correct=visitnepalquiz.analyzeAnswer(finalQuestion,answer)
+                if (correct):
+                    c+=1
+                    score+=100
+                count-=1
+            breaksection()
+            print("Your Final Score: {0}\nCorrect: {1}".format(score,c))
+            db.insertScore(playername,score)
+            breaksection()
+
+        elif(choice==2):
+            print("---------------High Score------------")
+            prompt="Choose:\n1.View High Score\n2.Reset High Score\n3.Return to main"
+            ch=int(input(prompt))
+            while(ch!=3):
+                if(ch==1):
+                    i=1
+                    scores=db.showHighscore()
+                    for score in scores:
+                        print(str(i)+'. '+score[0]+': '+str(score[1]))
+                        i+=1
+                    breaksection()
+
+                elif(ch==2):
+                    db.resetScore()
+                ch=int(input(prompt))
+                breakpoint()
+
+        choice=int(input(menu))
+        breaksection()
+
+import random
+
+def getQuestion(questions):
+    print(len(questions))
+    return random.choice(questions)
+
+def getOptions(values_selected_with_tags,question):
+    tag_contents=values_selected_with_tags
+    i,q,ans,unit,tag=question[0],question[1],question[2],question[3],question[4]
+    if(tag=="Number"):
+        l=len(ans)-2
+        num_ans=int(ans)
+        r1=num_ans-(pow(10,l)*random.randint(2,9))
+        r2=num_ans+(pow(10,l)*random.randint(2,9))
+        temp_options=[]
+        temp_options2=[]
+        count=0
+        while (count!=5):
+            temp_options.append(random.randint(r1,r2))
+            count+=1
+        for option in temp_options:
+            temp_options2.append(str(option)+' '+unit)
+        options=[ans+' '+unit]
+        count=3
+        while(count!=0):
+            option=random.choice(temp_options2)
+            if option not in options:
+                options.append(option)
+                temp_options2.remove(option)
+                count-=1
+        return options
+
+    elif tag=="State":
+        options=["State No. "+ans]
+        count=3
+        while(count!=0):
+            option="State No. "+str(random.randint(1,7))
+            if option not in options:
+                options.append(option)
+                count -=1
+        return options
+        
+    else:
+        options=[ans]
+        count=3
+        while(count!=0):
+            option=random.choice(tag_contents)
+            if option not in options:
+                options.append(option)
+                count -=1
+        return options
+
+def shuffleOptions(options):
+    shuffleOptions=[]
+    count=4
+    while(count!=0):
+        option=random.choice(options)
+        if option not in shuffleOptions:
+            shuffleOptions.append(option)
+            count-=1
+    return shuffleOptions
+
+def giveFinalQuestion(question,options):
+    que=question[1]
+    ans=options[0]
+    choices=shuffleOptions(options)
+    finalQuestion=(que,ans,choices)
+    return finalQuestion
+
+def printQuestion(question):
+    print (question[0])
+    print("1. " + question[2][0])
+    print("2. " + question[2][1])
+    print("3. " + question[2][2])
+    print("4. " + question[2][3])
+
+def analyzeAnswer(question,answer):
+    if(question[1]==question[2][answer]):
+        return True
+    else:
+        return False
